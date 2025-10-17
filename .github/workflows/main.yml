@@ -16,7 +16,7 @@ jobs:
       - run: npm install axios js-yaml
       - run: node scripts/run-rewrite.js
         env:
-          SUB_URL: ${{ secrets.SUB_URL }}
+          SUB_URL: "https://proxyinfo.net/api/v1/client/subscribe?token=e4921e435c8e2651c128f3e974a9cca4"
       - run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
