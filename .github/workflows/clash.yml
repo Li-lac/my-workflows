@@ -3,7 +3,7 @@ name: Merge Clash Subscription & JS Script
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"  # 每6小时自动运行，可调整
+    - cron: "0 */6 * * *"
 
 jobs:
   merge:
@@ -16,36 +16,36 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 2️⃣ 启动 Sub-Store Docker 容器
-      - name: Start Sub-Store
-        run: |
-          docker run -d --name substore -p 25500:25500 \
-            -v ${{ github.workspace }}/data:/root/sub-store \
-            xream/sub-store:latest
-          sleep 10
-          curl -s http://localhost:25500/api/version
-
-      # 3️⃣ 下载订阅链接（通过 Secret 保存，保证别人看不到）
+      # 2️⃣ 下载订阅链接（通过 Secret 保存）
       - name: Download subscription
         run: |
           # SUB_LINK="${{ secrets.SUB_LINK }}"
           SUB_LINK="https://proxyinfo.net/api/v1/client/subscribe?token=e4921e435c8e2651c128f3e974a9cca4&flag=clash"
-          curl -L "$SUB_LINK" -o base.yaml
+          curl -L "$SUB_LINK" -o subscription.yaml
           echo "✅ Subscription downloaded"
 
-      # 4️⃣ 合并订阅 + JS 脚本
+      # 3️⃣ 启动 Sub-Store Docker 容器，挂载 workspace 目录
+      - name: Start Sub-Store
+        run: |
+          mkdir -p ${{ github.workspace }}/substore-data
+          docker run -d --name substore -p 25500:25500 \
+            -v ${{ github.workspace }}/substore-data:/root/sub-store \
+            xream/sub-store:0.10.0
+          sleep 10
+          docker logs substore
+          curl -s http://localhost:25500/api/version
+
+      # 4️⃣ 将脚本和订阅文件拷贝到挂载目录
+      - name: Prepare files for Sub-Store
+        run: |
+          cp script.js substore-data/
+          cp subscription.yaml substore-data/
+
+      # 5️⃣ 合并订阅 + JS 脚本
       - name: Merge with JS script
         run: |
-          SCRIPT_FILE="./clash.js"  # 仓库内 JS 覆写脚本
-          curl -L "http://localhost:25500/sub?target=clash&url=base.yaml&config=$SCRIPT_FILE" -o merged.yaml
+          curl -L "http://localhost:25500/sub?target=clash&url=/root/sub-store/subscription.yaml&config=/root/sub-store/script.js" -o substore-data/merged.yaml
           echo "✅ Merged YAML created"
-
-      # 5️⃣ 准备 gh-pages 目录
-      - name: Prepare gh-pages files
-        run: |
-          mkdir -p docs
-          mv merged.yaml docs/final.yaml
-          echo "✅ Moved merged.yaml to docs/final.yaml"
 
       # 6️⃣ 推送到 gh-pages 分支
       - name: Publish to GitHub Pages
@@ -53,5 +53,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: docs
+          publish_dir: substore-data
           force_orphan: true
