@@ -3,7 +3,7 @@ name: Merge Clash Subscription & JS Script
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *"  # 每6小时自动运行，可调整
 
 jobs:
   merge:
@@ -25,9 +25,10 @@ jobs:
           sleep 10
           curl -s http://localhost:25500/api/version
 
-      # 3️⃣ 下载订阅链接
+      # 3️⃣ 下载订阅链接（通过 Secret 保存，保证别人看不到）
       - name: Download subscription
         run: |
+          # SUB_LINK="${{ secrets.SUB_LINK }}"
           SUB_LINK="https://proxyinfo.net/api/v1/client/subscribe?token=e4921e435c8e2651c128f3e974a9cca4&flag=clash"
           curl -L "$SUB_LINK" -o base.yaml
           echo "✅ Subscription downloaded"
@@ -35,19 +36,22 @@ jobs:
       # 4️⃣ 合并订阅 + JS 脚本
       - name: Merge with JS script
         run: |
-          SCRIPT_FILE="./clash.js"  # 仓库内 JS 脚本
+          SCRIPT_FILE="./clash.js"  # 仓库内 JS 覆写脚本
           curl -L "http://localhost:25500/sub?target=clash&url=base.yaml&config=$SCRIPT_FILE" -o merged.yaml
           echo "✅ Merged YAML created"
 
-      # 5️⃣ 推送到 gh-pages 分支
-      - name: Publish to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v6
-        with:
-          # github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: .
-          force_orphan: true
+      # 5️⃣ 准备 gh-pages 目录
+      - name: Prepare gh-pages files
         run: |
           mkdir -p docs
           mv merged.yaml docs/final.yaml
-          echo "✅ final.yaml pushed to gh-pages branch"
+          echo "✅ Moved merged.yaml to docs/final.yaml"
+
+      # 6️⃣ 推送到 gh-pages 分支
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: docs
+          force_orphan: true
