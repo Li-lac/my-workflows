@@ -30,7 +30,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/substore-data
           docker run -d --name substore -p 25500:25500 \
             -v ${{ github.workspace }}/substore-data:/root/sub-store \
-            xream/sub-store:0.10.0
+            xream/sub-store:latest
           sleep 10
           docker logs substore
           curl -s http://localhost:25500/api/version
