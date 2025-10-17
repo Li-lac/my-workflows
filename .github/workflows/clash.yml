@@ -38,7 +38,7 @@ jobs:
       # 4️⃣ 将脚本和订阅文件拷贝到挂载目录
       - name: Prepare files for Sub-Store
         run: |
-          cp script.js substore-data/
+          cp clash.js substore-data/
           cp subscription.yaml substore-data/
 
       # 5️⃣ 合并订阅 + JS 脚本
