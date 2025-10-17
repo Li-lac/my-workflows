@@ -43,7 +43,7 @@ jobs:
       # 5️⃣ 合并订阅 + JS 脚本
       - name: Merge with JS script
         run: |
-          curl -L "http://localhost:3000/sub?target=clash&url=/root/sub-store/subscription.yaml&config=/root/sub-store/script.js" -o substore-data/merged.yaml
+          curl -L "http://localhost:3000/sub?target=clash&url=/root/sub-store/subscription.yaml&config=/root/sub-store/clash.js" -o substore-data/merged.yaml
           echo "✅ Merged YAML created"
 
       # 6️⃣ 推送到 gh-pages 分支
