@@ -20,8 +20,7 @@ jobs:
       - name: Download subscription
         run: |
           # SUB_LINK="${{ secrets.SUB_LINK }}"
-          SUB_LINK="https://proxyinfo.net/api/v1/client/subscribe?token=e4921e435c8e2651c128f3e974a9cca4&flag=clash"
-          curl -L "$SUB_LINK" -o subscription.yaml
+          curl --location 'https://proxyinfo.net/api/v1/client/subscribe?token=e4921e435c8e2651c128f3e974a9cca4' --header 'User-Agent: clash-verge/2.4.0' -o subscription.yaml
           echo "✅ Subscription downloaded"
 
       # 3️⃣ 启动 Sub-Store Docker 容器，挂载 workspace 目录
